@@ -20,6 +20,12 @@ Open as a **Web Site** in Visual Studio (File > Open > Web Site) or deploy the f
 - Edit `Web.config` appSettings (`AccessSourcePath`, `LocalCacheFolder`, ...).
 - Windows authentication is enabled and anonymous denied; restrict further with `<authorization>` roles and use HTTPS, since this is employee data.
 
+## Pages
+- `Default.aspx` - attendance dashboard for the ZKTeco `att2000.mdb` schema (tables `CHECKINOUT`, `USERINFO`, `DEPARTMENTS`):
+  date range + department + name/badge filter, KPI tiles, present-per-day bars, and a per-employee daily grid
+  (first punch, last punch, hours, punch count) with sorting, paging and CSV export.
+  Check-in/out types in this file are inconsistent (`I`/`O`/`0`/`1`), so first/last punch of the day is used instead.
+- `Raw.aspx` - generic browser for any table in the file.
+
 ## Next steps
-Once you know the real table/column names (e.g. `CheckInOut`: `UserID`, `CheckTime`), add summary cards
-(late arrivals, hours per employee) as dedicated queries in `AccessReader`.
+Late/early rules and shift schedules live in the `SHIFT`, `SchClass` and `USER_OF_RUN` tables; they could be used to flag lateness.

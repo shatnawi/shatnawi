@@ -139,4 +139,59 @@ public static class AccessReader
             return dt;
         }
     }
+
+    // ---- ZKTeco att2000.mdb specific queries ----
+
+    public static DataTable Departments()
+    {
+        using (var con = Open())
+        {
+            var dt = new DataTable();
+            new OleDbDataAdapter("SELECT DEPTID, DEPTNAME FROM DEPARTMENTS ORDER BY DEPTNAME", con).Fill(dt);
+            return dt;
+        }
+    }
+
+    public static int EmployeeCount(int? deptId)
+    {
+        using (var con = Open())
+        {
+            var cmd = con.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM USERINFO" + (deptId.HasValue ? " WHERE DEFAULTDEPTID = ?" : "");
+            if (deptId.HasValue) cmd.Parameters.Add("d", OleDbType.Integer).Value = deptId.Value;
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+    }
+
+    /// <summary>Latest punch date in the file (null if empty).</summary>
+    public static DateTime? LastPunchDate()
+    {
+        using (var con = Open())
+        {
+            object o = new OleDbCommand("SELECT MAX(CHECKTIME) FROM CHECKINOUT", con).ExecuteScalar();
+            return (o == null || o is DBNull) ? (DateTime?)null : ((DateTime)o).Date;
+        }
+    }
+
+    /// <summary>All punches in [from, to] (inclusive days) joined with employee and department.</summary>
+    public static DataTable Punches(DateTime from, DateTime to, int? deptId)
+    {
+        using (var con = Open())
+        {
+            var cmd = con.CreateCommand();
+            cmd.CommandText =
+                "SELECT c.USERID, u.Badgenumber, u.Name, d.DEPTNAME, c.CHECKTIME " +
+                "FROM (CHECKINOUT AS c LEFT JOIN USERINFO AS u ON c.USERID = u.USERID) " +
+                "LEFT JOIN DEPARTMENTS AS d ON u.DEFAULTDEPTID = d.DEPTID " +
+                "WHERE c.CHECKTIME >= ? AND c.CHECKTIME < ?" +
+                (deptId.HasValue ? " AND u.DEFAULTDEPTID = ?" : "") +
+                " ORDER BY c.CHECKTIME";
+            cmd.Parameters.Add("f", OleDbType.Date).Value = from.Date;
+            cmd.Parameters.Add("t", OleDbType.Date).Value = to.Date.AddDays(1);
+            if (deptId.HasValue) cmd.Parameters.Add("d", OleDbType.Integer).Value = deptId.Value;
+            var dt = new DataTable();
+            using (var da = new OleDbDataAdapter(cmd)) da.Fill(dt);
+            return dt;
+        }
+    }
 }
