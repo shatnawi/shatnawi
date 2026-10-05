@@ -36,7 +36,10 @@ public static class AccessReader
             if (stale)
             {
                 string tmp = local + ".tmp";
-                File.Copy(src, tmp, true);               // reads over UNC share
+                // FileShare.ReadWrite: still readable while the fingerprint app has the .mdb open
+                using (var inp = new FileStream(src, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var outp = new FileStream(tmp, FileMode.Create, FileAccess.Write))
+                    inp.CopyTo(outp);
                 if (File.Exists(local)) File.Delete(local);
                 File.Move(tmp, local);
                 File.SetLastWriteTimeUtc(local, DateTime.UtcNow);
