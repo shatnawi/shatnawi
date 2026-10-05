@@ -1,4 +1,6 @@
-### Hi there 👋
+### Ahmed S. Shatnawi — personal website
+
+Static site (`index.html`, `assets/`). Open `index.html` or serve the folder with any static host.
 
 <!--
 **shatnawi/shatnawi** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
