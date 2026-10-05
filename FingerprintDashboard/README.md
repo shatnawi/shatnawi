@@ -28,4 +28,4 @@ Open as a **Web Site** in Visual Studio (File > Open > Web Site) or deploy the f
 - `Raw.aspx` - generic browser for any table in the file.
 
 ## Next steps
-Late/early rules and shift schedules live in the `SHIFT`, `SchClass` and `USER_OF_RUN` tables; they could be used to flag lateness.
+The shift tables in this file are empty, so Late / Early leave flags use `WorkStart`, `WorkEnd` and `GraceMinutes` from `Web.config`. If you later define shifts in the fingerprint software (`SchClass`, `USER_OF_RUN`), per-employee schedules could replace these.

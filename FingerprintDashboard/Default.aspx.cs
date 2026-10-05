@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -46,6 +47,11 @@ public partial class _Default : Page
         punchCount = p.Rows.Count;
         string q = (txtSearch.Text ?? "").Trim().ToLowerInvariant();
 
+        TimeSpan ws, we; int grace;
+        if (!TimeSpan.TryParse(ConfigurationManager.AppSettings["WorkStart"], out ws)) ws = new TimeSpan(8, 0, 0);
+        if (!TimeSpan.TryParse(ConfigurationManager.AppSettings["WorkEnd"], out we)) we = new TimeSpan(15, 0, 0);
+        if (!int.TryParse(ConfigurationManager.AppSettings["GraceMinutes"], out grace)) grace = 10;
+
         var dt = new DataTable();
         dt.Columns.Add("Date", typeof(string));
         dt.Columns.Add("Badge", typeof(string));
@@ -55,6 +61,7 @@ public partial class _Default : Page
         dt.Columns.Add("Last punch", typeof(string));
         dt.Columns.Add("Hours", typeof(double));
         dt.Columns.Add("Punches", typeof(int));
+        dt.Columns.Add("Status", typeof(string));
 
         var groups = p.Rows.Cast<DataRow>()
             .GroupBy(r => new { U = Convert.ToString(r["USERID"]), D = ((DateTime)r["CHECKTIME"]).Date });
@@ -77,6 +84,14 @@ public partial class _Default : Page
             row["Last punch"] = n > 1 ? max.ToString("HH:mm") : "";
             row["Hours"] = n > 1 ? Math.Round((max - min).TotalHours, 2) : 0.0;
             row["Punches"] = n;
+            var status = new System.Collections.Generic.List<string>();
+            if (n == 1) status.Add("Single punch");
+            else
+            {
+                if (min.TimeOfDay > ws.Add(TimeSpan.FromMinutes(grace))) status.Add("Late");
+                if (max.TimeOfDay < we) status.Add("Early leave");
+            }
+            row["Status"] = string.Join(", ", status);
             dt.Rows.Add(row);
         }
         return dt;
@@ -98,6 +113,7 @@ public partial class _Default : Page
             if (from == to) Kpi(kp, Math.Max(0, emp - presentPeople).ToString(), "No punch that day");
             Kpi(kp, punches.ToString(), "Total punches");
             var withHours = dt.AsEnumerable().Where(r => r.Field<int>("Punches") > 1).ToList();
+            Kpi(kp, dt.AsEnumerable().Count(r => r.Field<string>("Status").Contains("Late")).ToString(), "Late arrivals");
             Kpi(kp, withHours.Count == 0 ? "-" : withHours.Average(r => r.Field<double>("Hours")).ToString("0.0"),
                 "Avg hours / day");
             litKpis.Text = "<div class='kpis'>" + kp + "</div>";
