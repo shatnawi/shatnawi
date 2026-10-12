@@ -1,0 +1,19 @@
+version: "3.8"
+
+# Local dev convenience: SQL Server for AWVA.Api. The lab targets (Juice Shop, DVWA,
+# crAPI/VAmPI) and the ZAP/interactsh/Wazuh containers from Section 3's "Lab" row are a
+# separate compose file the team builds in the isolated lab network — this one is just
+# the application database.
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "ChangeMe_InDevOnly!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - awva-sql-data:/var/opt/mssql
+
+volumes:
+  awva-sql-data:
